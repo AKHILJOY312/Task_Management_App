@@ -1,0 +1,92 @@
+// src/interfaces/controllers/AuthController.ts
+import { Request, Response } from "express";
+
+import { HTTP_STATUS } from "../../http/constants/httpStatus";
+import {
+  AUTH_MESSAGES,
+  ERROR_MESSAGES,
+} from "@/interface-adapters/http/constants/messages";
+import { inject, injectable } from "inversify";
+import { TYPES } from "@/config/di/types";
+import {
+  UnauthorizedError,
+  ValidationError,
+} from "@/application/error/AppError";
+import {
+  clearRefreshTokenCookie,
+  setRefreshTokenCookie,
+} from "@/infra/web/express/utils/cookieUtils";
+import { ENV } from "@/config/env.config";
+import { IRegisterUser } from "@/application/ports/use-cases/auth/IRegisterUserUseCase";
+import { ILoginUser } from "@/application/ports/use-cases/auth/ILoginUserUseCase";
+import { IRefreshToken } from "@/application/ports/use-cases/auth/IRefreshTokenUseCase";
+import { ILogoutUser } from "@/application/ports/use-cases/auth/ILogoutUserUseCase";
+import { IGetMe } from "@/application/ports/use-cases/auth/IGetMeUseCase";
+
+import { registerSchema } from "@/interface-adapters/http/validators/userAuthValidators";
+
+@injectable()
+export class AuthController {
+  constructor(
+    @inject(TYPES.RegisterUser) private registerUC: IRegisterUser,
+
+    @inject(TYPES.LoginUser) private loginUC: ILoginUser,
+    @inject(TYPES.RefreshToken) private refreshUC: IRefreshToken,
+    @inject(TYPES.LogoutUser) private logoutUC: ILogoutUser,
+    @inject(TYPES.GetMe) private meUC: IGetMe,
+  ) {}
+
+  register = async (req: Request, res: Response) => {
+    const validatedData = registerSchema.safeParse(req.body);
+    if (!validatedData.success) {
+      throw new ValidationError(ERROR_MESSAGES.VALIDATION_ERROR);
+    }
+    const result = await this.registerUC.execute(req.body);
+    res.status(HTTP_STATUS.CREATED).json(result);
+  };
+
+  login = async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+    const { accessToken, refreshToken, user } = await this.loginUC.execute(
+      email,
+      password,
+    );
+
+    setRefreshTokenCookie(res, refreshToken);
+
+    res.json({ message: AUTH_MESSAGES.LOGIN_SUCCESS, accessToken, user });
+  };
+
+  refreshToken = async (req: Request, res: Response) => {
+    const token = req.cookies.refreshToken;
+    if (!token) {
+      throw new UnauthorizedError(AUTH_MESSAGES.NO_REFRESH_TOKEN);
+    }
+
+    const { accessToken } = await this.refreshUC.execute(token);
+    res.json({ accessToken });
+  };
+
+  logout = async (req: Request, res: Response) => {
+    const refreshToken = req.cookies.refreshToken as string | undefined;
+
+    if (!refreshToken) {
+      return res.json({ message: ERROR_MESSAGES.NO_SESSION });
+    }
+
+    // 1. Blacklist refresh token (using existing use case)
+    const refreshExpiresAt: Date = new Date(
+      Date.now() + 7 * 24 * 60 * 60 * 1000,
+    );
+    await this.logoutUC.execute(refreshToken, refreshExpiresAt);
+    clearRefreshTokenCookie(res);
+    res.json({ message: AUTH_MESSAGES.LOGOUT_SUCCESS });
+  };
+
+  me = async (req: Request, res: Response) => {
+    // @ts-expect-error – set by protect middleware
+    const userId: string = req.user.id;
+    const data = await this.meUC.execute(userId);
+    res.json(data);
+  };
+}

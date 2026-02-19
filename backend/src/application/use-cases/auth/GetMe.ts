@@ -1,0 +1,29 @@
+import { inject, injectable } from "inversify";
+import { IUserRepository } from "../../ports/repositories/IUserRepository";
+import { TYPES } from "@/config/di/types";
+import { NotFoundError } from "@/application/error/AppError";
+import { IGetMe } from "@/application/ports/use-cases/auth/IGetMeUseCase";
+import { GetMeResponseDTO } from "@/application/dto/auth/authDtos";
+
+@injectable()
+export class GetMe implements IGetMe {
+  constructor(
+    @inject(TYPES.UserRepository) private userRepo: IUserRepository,
+  ) {}
+
+  async execute(userId: string): Promise<GetMeResponseDTO> {
+    const user = await this.userRepo.findById(userId);
+
+    if (!user) throw new NotFoundError("User");
+    const profileImageUrl = "hi";
+    return {
+      user: {
+        id: user.id!,
+        name: user.name,
+        email: user.email,
+        avatarUrl: profileImageUrl,
+        isAdmin: user.isAdmin,
+      },
+    };
+  }
+}
