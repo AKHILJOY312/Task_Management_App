@@ -1,85 +1,32 @@
+// src/application/ports/use-cases/task/ITaskUseCases.ts
 import {
-  CreateTaskRequestDTO,
-  UpdateTaskRequestDTO,
-  UpdateTaskStatusRequestDTO,
-  TaskResponseDTO,
-  PresignedUrlResponseDTO,
-  SearchMembersRequestDTO,
-  MemberSearchResponseDTO,
-  GetTaskAttachmentDownloadUrlOutput,
-} from "@/application/dto/task/taskDto";
+  CreateTaskDto,
+  UpdateTaskDto,
+  MoveTaskPhaseDto,
+  TaskResponseDto,
+  TaskStatsResponseDto,
+} from "@/application/dto/taskDtos";
 
-/* ─────────────────────────────
-   Manager Use Cases
-   ───────────────────────────── */
-
-export interface ICreateTaskUseCase {
-  execute(
-    input: CreateTaskRequestDTO,
-    managerId: string,
-  ): Promise<TaskResponseDTO>;
+export interface ICreateTask {
+  execute(dto: CreateTaskDto, creatorId: string): Promise<TaskResponseDto>;
 }
 
-export interface IUpdateTaskUseCase {
-  execute(
-    taskId: string,
-    input: UpdateTaskRequestDTO,
-    managerId: string,
-  ): Promise<TaskResponseDTO>;
+export interface IUpdateTask {
+  execute(dto: UpdateTaskDto): Promise<TaskResponseDto>;
 }
 
-export interface IDeleteTaskUseCase {
-  execute(taskId: string, managerId: string): Promise<void>;
-}
-// Define this in your interfaces or taskDto.ts
-export interface ProjectTasksResponse {
-  tasks: TaskResponseDTO[];
-}
-export interface IGetProjectTasksUseCase {
-  execute(
-    projectId: string,
-    requesterId: string,
-  ): Promise<ProjectTasksResponse>;
+export interface IMoveTaskPhase {
+  execute(dto: MoveTaskPhaseDto, userId: string): Promise<TaskResponseDto>;
 }
 
-/* ─────────────────────────────
-   Member Use Cases
-   ───────────────────────────── */
-
-export interface IGetMyTasksUseCase {
-  execute(userId: string): Promise<TaskResponseDTO[]>;
+export interface IDeleteTask {
+  execute(taskId: string): Promise<void>;
 }
 
-export interface IUpdateTaskStatusUseCase {
-  execute(
-    taskId: string,
-    input: UpdateTaskStatusRequestDTO,
-    userId: string,
-  ): Promise<void>;
+export interface IListTasks {
+  execute(): Promise<TaskResponseDto[]>;
 }
 
-/* ─────────────────────────────
-   Attachments (S3)
-   ───────────────────────────── */
-
-export interface IGetAttachmentUploadUrlUseCase {
-  execute(
-    projectId: string,
-    fileName: string,
-    fileType: string,
-    requesterId: string,
-  ): Promise<PresignedUrlResponseDTO>;
-}
-export interface IGetTaskAttachmentDownloadUrlUseCase {
-  execute(attachmentId: string): Promise<GetTaskAttachmentDownloadUrlOutput>;
-}
-/* ─────────────────────────────
-   Search (Independent Use Case)
-   ───────────────────────────── */
-
-export interface ISearchProjectMembersUseCase {
-  execute(
-    input: SearchMembersRequestDTO,
-    managerId: string,
-  ): Promise<MemberSearchResponseDTO>;
+export interface IGetTaskStats {
+  execute(): Promise<TaskStatsResponseDto>;
 }

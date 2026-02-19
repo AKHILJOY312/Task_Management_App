@@ -1,13 +1,20 @@
-import { User } from "@/entities/user/User";
-import { IUserRepository } from "../../ports/repositories/IUserRepository";
-import { IAuthService } from "../../ports/services/IAuthService";
-import { IEmailService } from "../../ports/services/IEmailService";
-import { RegisterUserDto } from "../../dto/auth/RegisterUserDto";
-import crypto from "crypto";
-import { inject, injectable } from "inversify";
+// src/application/use-cases/auth/RegisterUser.ts
+import { injectable, inject } from "inversify";
 import { TYPES } from "@/config/di/types";
-import { BadRequestError } from "@/application/error/AppError";
-import { IRegisterUser } from "@/application/ports/use-cases/auth/IRegisterUserUseCase";
+import { User } from "@/entities/User";
+
+import { RegisterUserDto } from "@/application/dto/authDtos";
+
+import { IAuthService } from "@/application/ports/services/IAuthService";
+import { IEmailService } from "@/application/ports/services/IEmailService";
+
+import {
+  BadRequestError,
+  UnauthorizedError,
+} from "@/application/error/AppError";
+import { IRegisterUser } from "@/application/ports/use-cases/auth/interfaces";
+import { IUserRepository } from "@/application/ports/repositories/IUserRepository";
+import { IAccessKeyRepository } from "@/application/ports/repositories/IAccessKeyRepository";
 
 @injectable()
 export class RegisterUser implements IRegisterUser {
@@ -15,41 +22,41 @@ export class RegisterUser implements IRegisterUser {
     @inject(TYPES.UserRepository) private userRepo: IUserRepository,
     @inject(TYPES.AuthService) private auth: IAuthService,
     @inject(TYPES.EmailService) private email: IEmailService,
+    @inject(TYPES.AccessKeyRepository)
+    private accessKeyRepo: IAccessKeyRepository,
   ) {}
 
   async execute(dto: RegisterUserDto): Promise<{ message: string }> {
-    if (!dto.name || !dto.email || !dto.password || !dto.confirmPassword)
-      throw new BadRequestError("All fields are required");
+    // 1. Validate Access Key (Gatekeeper)
+    const isValidKey = await this.accessKeyRepo.validateAndUse(
+      dto.accessKey,
+      dto.email,
+    );
+    if (!isValidKey)
+      throw new UnauthorizedError("INVALID_OR_EXPIRED_ACCESS_KEY");
 
-    if (dto.password !== dto.confirmPassword)
-      throw new BadRequestError("Passwords do not match");
-
+    // 2. Check existing user
     const existing = await this.userRepo.findByEmail(dto.email);
-    if (existing)
-      throw new BadRequestError("User Already Existed Login Instead");
+    if (existing) throw new BadRequestError("USER_ALREADY_EXISTS");
 
+    // 3. Prepare User Data
     const hashed = await this.auth.hashPassword(dto.password);
-    const token = crypto.randomBytes(32).toString("hex");
-    const expires = new Date(Date.now() + 3_600_000); // 1h
+    const otp = this.auth.generateOtp(); // 6-digit string
+    const stamp = this.auth.generateToken(); // Random string for securityStamp
 
     const user = new User({
       name: dto.name,
       email: dto.email,
       password: hashed,
+      otpCode: otp,
       isVerified: false,
-      isAdmin: false,
-      isBlocked: false,
-      verificationToken: token,
-      verificationTokenExpires: expires,
-      securityStamp: token,
+      securityStamp: stamp,
     });
 
+    // 4. Persist and Notify
     await this.userRepo.create(user);
-    await this.email.sendVerification(dto.email, token);
+    await this.email.sendEmailOtp(user.email, otp);
 
-    return {
-      message:
-        "User registered. Please check your email to verify your account.",
-    };
+    return { message: "REGISTRATION_SUCCESS_CHECK_EMAIL_FOR_OTP" };
   }
 }

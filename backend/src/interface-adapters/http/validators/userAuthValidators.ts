@@ -1,38 +1,30 @@
+// src/interface-adapters/http/validators/userAuthValidators.ts
 import { z } from "zod";
+
+const accessKeySchema = z
+  .string()
+  .length(6, "Access key must be exactly 6 characters")
+  .transform((val) => val.trim());
+
+const otpSchema = z
+  .string()
+  .length(6, "OTP code must be 6 digits")
+  .regex(/^\d+$/, "OTP must contain only numbers");
 
 export const registerSchema = z
   .object({
-    name: z
-      .string()
-      .min(2, "Name must be at least 2 characters")
-      .max(50, "Name cannot exceed 50 characters")
-      .regex(/^[A-Za-z\s]+$/, "Name can only contain letters and spaces")
-      .transform((val) => val.trim()),
-
-    email: z
-      .string()
-      .email("Invalid email address")
-      .toLowerCase()
-      .transform((val) => val.trim()),
-
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .regex(/\d/, "Password must contain at least one number")
-      .regex(
-        /[ !@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/,
-        "Password must contain at least one special character"
-      ),
-
+    name: z.string().min(2).max(50),
+    email: z.string().email().toLowerCase(),
+    password: z.string().min(8),
     confirmPassword: z.string(),
+    accessKey: accessKeySchema, // The 6-digit restricted key
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
-  })
-  // Strip confirmPassword and transform final output
-  .transform(({ name, email, password }) => ({
-    name,
-    email,
-    password,
-  }));
+  });
+
+export const verifyEmailSchema = z.object({
+  email: z.string().email(),
+  otpCode: otpSchema,
+});

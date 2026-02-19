@@ -1,50 +1,37 @@
-import { inject, injectable } from "inversify";
-import { IUserRepository } from "../../ports/repositories/IUserRepository";
-import { IAuthService } from "../../ports/services/IAuthService";
+// src/application/use-cases/auth/RefreshToken.ts
+import { injectable, inject } from "inversify";
 import { TYPES } from "@/config/di/types";
-import {
-  BadRequestError,
-  ForbiddenError,
-  UnauthorizedError,
-} from "@/application/error/AppError";
-import { ITokenBlacklistService } from "@/application/ports/services/ITokenBlacklistService";
-import { IRefreshToken } from "@/application/ports/use-cases/auth/IRefreshTokenUseCase";
+
+import { IAuthService } from "@/application/ports/services/IAuthService";
+import { UnauthorizedError } from "@/application/error/AppError";
+import { IRefreshToken } from "@/application/ports/use-cases/auth/interfaces";
+import { IUserRepository } from "@/application/ports/repositories/IUserRepository";
 
 @injectable()
 export class RefreshToken implements IRefreshToken {
   constructor(
     @inject(TYPES.UserRepository) private userRepo: IUserRepository,
     @inject(TYPES.AuthService) private auth: IAuthService,
-    @inject(TYPES.TokenBlacklistService)
-    private blackListService: ITokenBlacklistService
   ) {}
 
   async execute(refreshToken: string): Promise<{ accessToken: string }> {
-    const payload = this.auth.verifyRefreshToken(refreshToken);
-    if (!payload)
-      throw new BadRequestError("Refresh token is missing or invalid");
+    // 1. Verify the refresh token structure
+    const decoded = this.auth.verifyRefreshToken(refreshToken);
+    if (!decoded) throw new UnauthorizedError("INVALID_REFRESH_TOKEN");
 
-    const isBlacklisted = await this.blackListService.isBlacklisted(
-      refreshToken
-    );
-    if (isBlacklisted) {
-      throw new UnauthorizedError(
-        "Token has been revoked. Please login again."
-      );
-    }
-    const user = await this.userRepo.findById(payload.id);
-    if (!user) throw new UnauthorizedError("Invalid or expired refresh token");
-    if (user.isBlocked) {
-      throw new ForbiddenError(
-        "Your account has been blocked. Please contact support."
-      );
+    // 2. Fetch user to verify current state
+    const user = await this.userRepo.findById(decoded.id);
+    if (!user || !user.isVerified) {
+      throw new UnauthorizedError("SESSION_EXPIRED_OR_INVALID");
     }
 
+    // 3. Generate new Access Token using the current Security Stamp
     const accessToken = this.auth.generateAccessToken(
       user.id!,
       user.email,
-      user.securityStamp!
+      user.securityStamp || "",
     );
+
     return { accessToken };
   }
 }

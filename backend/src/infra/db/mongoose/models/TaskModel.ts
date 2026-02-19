@@ -1,71 +1,50 @@
-import {
-  Task,
-  TASK_PRIORITIES,
-  TASK_STATUSES,
-  TaskPriority,
-  TaskProps,
-  TaskStatus,
-} from "@/entities/task/Task";
+// src/infrastructure/models/TaskModel.ts
 import mongoose, { Document, Schema, Types } from "mongoose";
+import { Task, TaskProps, TaskStatus } from "@/entities/Task";
 
 export interface TaskDoc extends Document {
   _id: Types.ObjectId;
-  projectId: string;
   title: string;
-  description?: string | null;
-  assignedTo: string;
-  assignedBy: string;
-  priority: TaskPriority;
+  description: string;
   status: TaskStatus;
-  dueDate?: Date | null;
-  hasAttachments: boolean;
+  assignedTo: string; // Stored as string ID
+  createdBy: string; // Stored as string ID
   isDeleted: boolean;
   deletedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const taskScheme = new Schema<TaskDoc>(
+const taskSchema = new Schema<TaskDoc>(
   {
-    projectId: { type: String, required: true, index: true },
     title: { type: String, required: true, trim: true },
-    description: { type: String, default: null },
-    assignedTo: { type: String, required: true, index: true },
-    priority: {
-      type: String,
-      enum: TASK_PRIORITIES,
-      required: true,
-    },
+    description: { type: String, required: true },
     status: {
       type: String,
-      enum: TASK_STATUSES,
-      required: true,
+      enum: ["todo", "in-progress", "done"],
+      default: "todo",
+      index: true,
     },
-    dueDate: { type: Date, default: null },
-    hasAttachments: { type: Boolean, default: false },
-
+    assignedTo: { type: String, required: true, index: true },
+    createdBy: { type: String, required: true },
     isDeleted: { type: Boolean, default: false, index: true },
     deletedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );
 
-export const TaskModel = mongoose.model<TaskDoc>("Task", taskScheme);
+export const TaskModel = mongoose.model<TaskDoc>("Task", taskSchema);
 
+// Mapper: Mongo → Domain
 export const toTaskEntity = (doc: TaskDoc): Task => {
   const props: TaskProps = {
     id: doc._id.toString(),
-    projectId: doc.projectId,
     title: doc.title,
-    description: doc.description ?? null,
-    assignedTo: doc.assignedTo,
-    priority: doc.priority,
+    description: doc.description,
     status: doc.status,
-    dueDate: doc.dueDate ?? null,
-    hasAttachments: doc.hasAttachments,
-    assignedBy: doc.assignedBy,
+    assignedTo: doc.assignedTo,
+    createdBy: doc.createdBy,
     createdAt: doc.createdAt,
-    updatedAt: doc.updatedAt,
   };
 
   return new Task(props);

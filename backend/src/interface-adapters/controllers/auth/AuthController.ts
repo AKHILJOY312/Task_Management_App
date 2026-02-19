@@ -1,48 +1,54 @@
-// src/interfaces/controllers/AuthController.ts
 import { Request, Response } from "express";
-
-import { HTTP_STATUS } from "../../http/constants/httpStatus";
-import {
-  AUTH_MESSAGES,
-  ERROR_MESSAGES,
-} from "@/interface-adapters/http/constants/messages";
 import { inject, injectable } from "inversify";
 import { TYPES } from "@/config/di/types";
+import { HTTP_STATUS } from "../../http/constants/httpStatus";
+import { AUTH_MESSAGES } from "@/interface-adapters/http/constants/messages";
 import {
-  UnauthorizedError,
   ValidationError,
+  UnauthorizedError,
 } from "@/application/error/AppError";
 import {
-  clearRefreshTokenCookie,
   setRefreshTokenCookie,
+  clearRefreshTokenCookie,
 } from "@/infra/web/express/utils/cookieUtils";
-import { ENV } from "@/config/env.config";
-import { IRegisterUser } from "@/application/ports/use-cases/auth/IRegisterUserUseCase";
-import { ILoginUser } from "@/application/ports/use-cases/auth/ILoginUserUseCase";
-import { IRefreshToken } from "@/application/ports/use-cases/auth/IRefreshTokenUseCase";
-import { ILogoutUser } from "@/application/ports/use-cases/auth/ILogoutUserUseCase";
-import { IGetMe } from "@/application/ports/use-cases/auth/IGetMeUseCase";
-
-import { registerSchema } from "@/interface-adapters/http/validators/userAuthValidators";
+import {
+  registerSchema,
+  verifyEmailSchema,
+} from "@/interface-adapters/http/validators/userAuthValidators";
+import {
+  IRegisterUser,
+  ILoginUser,
+  IRefreshToken,
+  IGetMe,
+  IVerifyEmail,
+} from "@/application/ports/use-cases/auth/interfaces";
 
 @injectable()
 export class AuthController {
   constructor(
     @inject(TYPES.RegisterUser) private registerUC: IRegisterUser,
-
+    @inject(TYPES.VerifyEmail) private verifyEmailUC: IVerifyEmail,
     @inject(TYPES.LoginUser) private loginUC: ILoginUser,
     @inject(TYPES.RefreshToken) private refreshUC: IRefreshToken,
-    @inject(TYPES.LogoutUser) private logoutUC: ILogoutUser,
     @inject(TYPES.GetMe) private meUC: IGetMe,
   ) {}
 
   register = async (req: Request, res: Response) => {
     const validatedData = registerSchema.safeParse(req.body);
     if (!validatedData.success) {
-      throw new ValidationError(ERROR_MESSAGES.VALIDATION_ERROR);
+      throw new ValidationError(validatedData.error.issues[0].message);
     }
-    const result = await this.registerUC.execute(req.body);
+    const result = await this.registerUC.execute(validatedData.data);
     res.status(HTTP_STATUS.CREATED).json(result);
+  };
+
+  verifyEmail = async (req: Request, res: Response) => {
+    const validatedData = verifyEmailSchema.safeParse(req.body);
+    if (!validatedData.success) {
+      throw new ValidationError(validatedData.error.issues[0].message);
+    }
+    const result = await this.verifyEmailUC.execute(validatedData.data);
+    res.status(HTTP_STATUS.OK).json(result);
   };
 
   login = async (req: Request, res: Response) => {
@@ -53,32 +59,18 @@ export class AuthController {
     );
 
     setRefreshTokenCookie(res, refreshToken);
-
     res.json({ message: AUTH_MESSAGES.LOGIN_SUCCESS, accessToken, user });
   };
 
   refreshToken = async (req: Request, res: Response) => {
     const token = req.cookies.refreshToken;
-    if (!token) {
-      throw new UnauthorizedError(AUTH_MESSAGES.NO_REFRESH_TOKEN);
-    }
+    if (!token) throw new UnauthorizedError(AUTH_MESSAGES.NO_REFRESH_TOKEN);
 
     const { accessToken } = await this.refreshUC.execute(token);
     res.json({ accessToken });
   };
 
   logout = async (req: Request, res: Response) => {
-    const refreshToken = req.cookies.refreshToken as string | undefined;
-
-    if (!refreshToken) {
-      return res.json({ message: ERROR_MESSAGES.NO_SESSION });
-    }
-
-    // 1. Blacklist refresh token (using existing use case)
-    const refreshExpiresAt: Date = new Date(
-      Date.now() + 7 * 24 * 60 * 60 * 1000,
-    );
-    await this.logoutUC.execute(refreshToken, refreshExpiresAt);
     clearRefreshTokenCookie(res);
     res.json({ message: AUTH_MESSAGES.LOGOUT_SUCCESS });
   };

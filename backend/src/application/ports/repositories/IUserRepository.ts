@@ -1,30 +1,14 @@
-// src/domain/interfaces/IUserRepository.ts
-import { User } from "../../../domain/entities/user/User";
-import { ListUsersQuery } from "../../use-cases/user/ListUserUseCase";
-
-export interface PaginationResult {
-  users: User[];
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-}
+import { User } from "@/entities/User";
 
 export interface IUserRepository {
   create(user: User): Promise<User>;
-  delete(userId: string): Promise<void>;
   findById(id: string): Promise<User | null>;
-  update(user: User): Promise<void>;
-
   findByEmail(email: string): Promise<User | null>;
-  findByVerificationToken(token: string): Promise<User | null>;
-  findByResetToken(token: string): Promise<User | null>;
-  findUsersWithPagination(query: ListUsersQuery): Promise<PaginationResult>;
-  findByIdWithPassword(id: string): Promise<User | null>;
+  update(user: User): Promise<void>;
+  delete(userId: string): Promise<void>;
 
-  countAdmins(): Promise<number>;
-  // Optional: Specific methods for direct updates (alternative to using generic save)
-  updateStatus(userId: string): Promise<void>;
-  updateRole(userId: string): Promise<void>;
+  // Security & Verification specific
+  findByOtpCode(otpCode: string): Promise<User | null>;
+  updateVerificationStatus(userId: string, isVerified: boolean): Promise<void>;
   updateSecurityStamp(userId: string, stamp: string): Promise<void>;
 }

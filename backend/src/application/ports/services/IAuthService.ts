@@ -1,16 +1,20 @@
-// src/domain/interfaces/IAuthService.ts
 export interface IAuthService {
+  /** Encryption */
   hashPassword(plain: string): Promise<string>;
   comparePassword(plain: string, hash: string): Promise<boolean>;
 
+  /** Token Management */
+
   generateAccessToken(userId: string, email: string, stamp: string): string;
   generateRefreshToken(userId: string): string;
-
-  /** Returns decoded payload or null if invalid */
   verifyRefreshToken(token: string): { id: string } | null;
 
-  generateRandomPassword(): string;
-  invalidateUserSessions(userId: string): Promise<void>;
+  /** Session Control */
 
-  generateOtp(lengthOfOtp: number): number;
+  invalidateUserSessions(userId: string): Promise<void>;
+  generateToken(): string;
+
+  /** Verification */
+
+  generateOtp(): string;
 }

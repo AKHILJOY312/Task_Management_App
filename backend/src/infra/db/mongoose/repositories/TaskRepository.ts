@@ -1,27 +1,22 @@
+// src/infrastructure/repositories/TaskRepository.ts
 import { HydratedDocument } from "mongoose";
-import { Task } from "@/entities/task/Task";
-import { TaskStatus } from "@/entities/task/Task";
-import { ITaskRepository } from "@/application/ports/repositories/ITaskRepository";
+
 import { TaskDoc, TaskModel, toTaskEntity } from "../models/TaskModel";
+import { ITaskRepository } from "@/application/ports/repositories/ITaskRepository";
+import { Task } from "@/entities/Task";
 
 export class TaskRepository implements ITaskRepository {
-  // Mongo → Domain
   private toDomain(doc: HydratedDocument<TaskDoc>): Task {
     return toTaskEntity(doc);
   }
 
-  // Domain → Mongo
   private toPersistence(task: Task): Partial<TaskDoc> {
     return {
-      id: task.id,
-      projectId: task.projectId,
       title: task.title,
       description: task.description,
-      assignedTo: task.assignedTo,
-      priority: task.priority,
       status: task.status,
-      dueDate: task.dueDate ? new Date(task.dueDate) : null,
-      hasAttachments: task.hasAttachments,
+      assignedTo: task.assignedTo,
+      createdBy: task.createdBy,
     };
   }
 
@@ -37,56 +32,55 @@ export class TaskRepository implements ITaskRepository {
     );
   }
 
-  async delete(id: string): Promise<Task | null> {
-    return this.softDelete(id).then(() => null);
-  }
-
-  async softDelete(taskId: string): Promise<void> {
-    await TaskModel.updateOne(
-      { id: taskId, isDeleted: false },
-      {
-        $set: {
-          isDeleted: true,
-          deletedAt: new Date(),
-          updatedAt: new Date(),
-        },
-      },
-    );
-  }
-
   async findById(id: string): Promise<Task | null> {
     const doc = await TaskModel.findOne({ _id: id, isDeleted: false });
     return doc ? this.toDomain(doc) : null;
   }
 
-  async findByProjectId(projectId: string): Promise<Task[]> {
-    const docs = await TaskModel.find({
-      projectId,
-      isDeleted: false,
-    }).sort({ createdAt: -1 });
-
+  async findAll(): Promise<Task[]> {
+    const docs = await TaskModel.find({ isDeleted: false }).sort({
+      createdAt: -1,
+    });
     return docs.map((d) => this.toDomain(d));
   }
 
-  async findByAssignedTo(userId: string): Promise<Task[]> {
-    const docs = await TaskModel.find({
-      assignedTo: userId,
-      isDeleted: false,
-    }).sort({ dueDate: 1 });
-
-    return docs.map((d) => this.toDomain(d));
+  async delete(id: string): Promise<void> {
+    await TaskModel.updateOne(
+      { _id: id },
+      {
+        $set: {
+          isDeleted: true,
+          deletedAt: new Date(),
+        },
+      },
+    );
   }
 
-  async findByProjectAndStatus(
-    projectId: string,
-    status: TaskStatus,
-  ): Promise<Task[]> {
-    const docs = await TaskModel.find({
-      projectId,
-      status,
-      isDeleted: false,
-    }).sort({ createdAt: 1 });
+  async getTaskMetrics(): Promise<{
+    todo: number;
+    inProgress: number;
+    done: number;
+    total: number;
+  }> {
+    const stats = await TaskModel.aggregate([
+      { $match: { isDeleted: false } },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
 
-    return docs.map((d) => this.toDomain(d));
+    const result = { todo: 0, inProgress: 0, done: 0, total: 0 };
+
+    stats.forEach((s) => {
+      if (s._id === "todo") result.todo = s.count;
+      if (s._id === "in-progress") result.inProgress = s.count;
+      if (s._id === "done") result.done = s.count;
+      result.total += s.count;
+    });
+
+    return result;
   }
 }

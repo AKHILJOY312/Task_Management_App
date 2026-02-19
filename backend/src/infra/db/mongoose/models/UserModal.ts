@@ -1,58 +1,45 @@
-import mongoose, { Model, Schema, Types } from "mongoose";
+// src/infrastructure/models/UserModel.ts
+import { User, UserProps } from "@/entities/User";
+import mongoose, { Document, Schema, Types } from "mongoose";
 
-export interface IUserDocument extends Document {
-  _id: Types.ObjectId; // Explicitly define _id to solve Error 2339
+export interface UserDoc extends Document {
+  _id: Types.ObjectId;
   name: string;
   email: string;
   password: string;
-  avatarUrl?: string;
-  about?: string;
-  phone?: string;
-  link?: string;
-  isAdmin: boolean;
-  isBlocked: boolean;
+  otpCode?: string | null;
   isVerified: boolean;
-  verificationToken?: string;
-  verificationTokenExpires?: Date;
-  resetPasswordToken?: string;
-  resetPasswordExpires?: Date;
   securityStamp: string;
   createdAt: Date;
   updatedAt: Date;
 }
-const userSchema = new Schema<IUserDocument>(
-  {
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true, select: false },
-    avatarUrl: { type: String },
-    about: { type: String },
-    phone: { type: String },
-    link: { type: String },
-    isAdmin: { type: Boolean, default: false },
-    isBlocked: { type: Boolean, default: false },
-    isVerified: { type: Boolean, default: false },
-    verificationToken: {
-      type: String,
-    },
-    verificationTokenExpires: {
-      type: Date,
-    },
-    resetPasswordToken: { type: String },
-    resetPasswordExpires: { type: Date },
-    securityStamp: { type: String },
-  },
 
+const userSchema = new Schema<UserDoc>(
+  {
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    password: { type: String, required: true },
+    otpCode: { type: String, default: null },
+    isVerified: { type: Boolean, default: false },
+    securityStamp: { type: String, required: true },
+  },
   { timestamps: true },
 );
 
-userSchema.index({ name: 1 });
-userSchema.index({ email: 1 });
-// For a combined search field:
-userSchema.index({ name: 1, email: 1 });
+export const UserModel = mongoose.model<UserDoc>("User", userSchema);
 
-const UserModel: Model<IUserDocument> = mongoose.model<IUserDocument>(
-  "User",
-  userSchema,
-);
-export default UserModel;
+// Mapper: Mongo → Domain
+export const toUserEntity = (doc: UserDoc): User => {
+  const props: UserProps = {
+    id: doc._id.toString(),
+    name: doc.name,
+    email: doc.email,
+    password: doc.password,
+    otpCode: doc.otpCode ?? undefined,
+    isVerified: doc.isVerified,
+    securityStamp: doc.securityStamp,
+    createdAt: doc.createdAt,
+  };
+
+  return new User(props);
+};

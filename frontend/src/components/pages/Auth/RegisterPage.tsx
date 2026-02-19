@@ -135,6 +135,22 @@ const RegisterPage: React.FC = () => {
 
         <form onSubmit={handleSubmit}>
           <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                required
+                type="text"
+                name="name"
+                label="NAME"
+                variant="filled"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                InputProps={{ sx: inputStyles }}
+                InputLabelProps={{
+                  sx: { color: "rgba(255,255,255,0.5)", fontFamily: MONO_FONT },
+                }}
+              />
+            </Grid>
             <Grid item xs={12}>
               <TextField
                 fullWidth

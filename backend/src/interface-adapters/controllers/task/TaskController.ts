@@ -1,134 +1,93 @@
+// src/interface-adapters/controllers/task/TaskController.ts
 import { Request, Response } from "express";
 import { inject, injectable } from "inversify";
 import { TYPES } from "@/config/di/types";
-import { HTTP_STATUS } from "@/interface-adapters/http/constants/httpStatus";
+import { HTTP_STATUS } from "../../http/constants/httpStatus";
 import { ValidationError } from "@/application/error/AppError";
+
+// Assume you have these validators defined
 import {
-  ICreateTaskUseCase,
-  IDeleteTaskUseCase,
-  IGetProjectTasksUseCase,
-  IUpdateTaskStatusUseCase,
-  IUpdateTaskUseCase,
-} from "@/application/ports/use-cases/task/interfaces";
-import {
-  CreateTaskSchema,
-  UpdateTaskStatusSchema,
-  ListTasksQuerySchema,
-  UpdateTaskSchema,
+  createTaskSchema,
+  updateTaskSchema,
+  moveTaskSchema,
 } from "@/interface-adapters/http/validators/taskValidators";
+import {
+  ICreateTask,
+  IUpdateTask,
+  IMoveTaskPhase,
+  IDeleteTask,
+  IListTasks,
+  IGetTaskStats,
+} from "@/application/ports/use-cases/task/interfaces";
 
 @injectable()
 export class TaskController {
   constructor(
-    @inject(TYPES.CreateTaskUseCase)
-    private createTaskUC: ICreateTaskUseCase,
-
-    @inject(TYPES.DeleteTaskUseCase)
-    private deleteTaskUC: IDeleteTaskUseCase,
-
-    @inject(TYPES.GetProjectTasksUseCase)
-    private listTasksUC: IGetProjectTasksUseCase,
-
-    @inject(TYPES.UpdateTaskStatusUseCase)
-    private updateStatusUC: IUpdateTaskStatusUseCase,
-
-    @inject(TYPES.UpdateTaskUseCase) private updateTaskUC: IUpdateTaskUseCase,
+    @inject(TYPES.CreateTask) private createTaskUC: ICreateTask,
+    @inject(TYPES.UpdateTask) private updateTaskUC: IUpdateTask,
+    @inject(TYPES.MoveTaskPhase) private moveTaskUC: IMoveTaskPhase,
+    @inject(TYPES.DeleteTask) private deleteTaskUC: IDeleteTask,
+    @inject(TYPES.ListTasks) private listTasksUC: IListTasks,
+    @inject(TYPES.GetTaskStats) private getStatsUC: IGetTaskStats,
   ) {}
 
-  // POST /projects/:projectId/tasks
-  createTask = async (req: Request, res: Response) => {
-    const parsed = CreateTaskSchema.safeParse(req.body);
-    if (!parsed.success) {
-      throw new ValidationError("Invalid task data");
+  create = async (req: Request, res: Response) => {
+    const validatedData = createTaskSchema.safeParse(req.body);
+    if (!validatedData.success) {
+      throw new ValidationError(validatedData.error.issues[0].message);
     }
 
-    const { projectId } = req.params;
-    const managerId = req.user!.id;
-
-    const task = await this.createTaskUC.execute(
-      {
-        projectId,
-        ...parsed.data,
-      },
-      managerId,
+    // @ts-expect-error - set by auth middleware
+    const creatorId = req.user.id;
+    const result = await this.createTaskUC.execute(
+      validatedData.data,
+      creatorId,
     );
-
-    return res.status(HTTP_STATUS.CREATED).json({
-      success: true,
-      data: task,
-    });
+    res.status(HTTP_STATUS.CREATED).json(result);
   };
 
-  updateTask = async (req: Request, res: Response) => {
-    const parsedBody = UpdateTaskSchema.safeParse(req.body);
-    console.log(parsedBody.error);
-    if (!parsedBody.success) {
-      throw new ValidationError("Invalid request body parameters");
-    }
-    const { taskId } = req.params;
-    const managerId = req.user!.id;
-    const result = await this.updateTaskUC.execute(
-      taskId,
-      parsedBody.data,
-      managerId,
-    );
-
-    return res.status(200).json({
-      success: true,
-      data: result,
-    });
+  list = async (_req: Request, res: Response) => {
+    const result = await this.listTasksUC.execute();
+    res.json(result);
   };
 
-  // GET /projects/:projectId/tasks
-  listTasks = async (req: Request, res: Response) => {
-    const parsedQuery = ListTasksQuerySchema.safeParse(req.query);
-    if (!parsedQuery.success) {
-      throw new ValidationError("Invalid query parameters");
+  update = async (req: Request, res: Response) => {
+    const validatedData = updateTaskSchema.safeParse({
+      ...req.body,
+      id: req.params.id,
+    });
+    if (!validatedData.success) {
+      throw new ValidationError(validatedData.error.issues[0].message);
     }
 
-    const { projectId } = req.params;
-    const requesterId = req.user!.id;
-
-    const result = await this.listTasksUC.execute(projectId, requesterId);
-
-    return res.status(HTTP_STATUS.OK).json({
-      success: true,
-      data: result,
-    });
+    const result = await this.updateTaskUC.execute(validatedData.data);
+    res.json(result);
   };
 
-  // DELETE /tasks/:taskId
-  deleteTask = async (req: Request, res: Response) => {
-    const { taskId } = req.params;
-    const requestedBy = req.user!.id;
-
-    await this.deleteTaskUC.execute(taskId, requestedBy);
-
-    return res.status(HTTP_STATUS.OK).json({
-      success: true,
-      message: "Task deleted successfully",
+  movePhase = async (req: Request, res: Response) => {
+    const validatedData = moveTaskSchema.safeParse({
+      ...req.body,
+      id: req.params.id,
     });
-  };
-
-  // PATCH /tasks/:taskId/status
-  updateTaskStatus = async (req: Request, res: Response) => {
-    const parsed = UpdateTaskStatusSchema.safeParse(req.body);
-    if (!parsed.success) {
-      throw new ValidationError("Invalid status");
+    if (!validatedData.success) {
+      throw new ValidationError(validatedData.error.issues[0].message);
     }
 
-    const { taskId } = req.params;
-    const requestedBy = req.user!.id;
+    // @ts-expect-error - current operator ID
+    const userId = req.user.id;
+    // The use case handles the permission check (Assigned user only)
+    const result = await this.moveTaskUC.execute(validatedData.data, userId);
+    res.json(result);
+  };
 
-    const task = await this.updateStatusUC.execute(
-      taskId,
-      parsed.data,
-      requestedBy,
-    );
+  delete = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    await this.deleteTaskUC.execute(id);
+    res.status(HTTP_STATUS.NO_CONTENT).send();
+  };
 
-    return res.status(HTTP_STATUS.OK).json({
-      success: true,
-      data: task,
-    });
+  getStats = async (_req: Request, res: Response) => {
+    const result = await this.getStatsUC.execute();
+    res.json(result);
   };
 }

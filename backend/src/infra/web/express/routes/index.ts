@@ -1,11 +1,7 @@
 import { Router } from "express";
 import { container } from "@/config/di/container";
-
 import { getAuthRoutes } from "./authRoutes";
-
-import { getProjectRoutes } from "./projectRoutes";
-
-import { API_ROUTES } from "@/config/routes.config";
+import { getTasksRoutes } from "./tasksRoutes";
 
 const router = Router();
 
@@ -14,8 +10,8 @@ router.use((req, res, next) => {
   next();
 });
 
-router.use(API_ROUTES.AUTH.ROOT, getAuthRoutes(container));
+router.use("/auth", getAuthRoutes(container));
 
-router.use(API_ROUTES.PROJECTS.ROOT, getProjectRoutes(container));
+router.use("/tasks", getTasksRoutes(container));
 
 export default router;
