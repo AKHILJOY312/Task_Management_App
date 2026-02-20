@@ -1,12 +1,12 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAppSelector } from "../redux/hooks";
 
-export const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+export const PublicRoute = () => {
   const { isAuthenticated } = useAppSelector((s) => s.auth);
-  return isAuthenticated ? <Navigate to="/tasks" replace /> : <>{children}</>;
+  return isAuthenticated ? <Navigate to="/tasks" replace /> : <Outlet />;
 };
 
-export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+export const ProtectedRoute = () => {
   const { isAuthenticated } = useAppSelector((s) => s.auth);
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 };
