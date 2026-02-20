@@ -12,6 +12,9 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 import { COLORS, MONO_FONT } from "@/styles/theme";
 import type { Task } from "@/types";
+import { motion } from "framer-motion";
+
+const MotionPaper = motion(Paper);
 
 const statusColorMap = {
   todo: "#9E9E9E",
@@ -36,7 +39,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDelete, onMoveNext }) => {
   };
 
   return (
-    <Paper
+    <MotionPaper
+      layout
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ duration: 0.25 }}
       elevation={0}
       sx={{
         width: "100%",
@@ -48,7 +56,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDelete, onMoveNext }) => {
         flexDirection: "column",
         gap: 1,
         position: "relative",
-        transition: "0.2s",
+        transition: "all 250ms cubic-bezier(0.4, 0, 0.2, 1)",
         "&:hover": {
           borderColor: COLORS.primaryUI,
           transform: "translateY(-2px)",
@@ -157,7 +165,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDelete, onMoveNext }) => {
           {formattedDate}
         </Typography>
       </Box>
-    </Paper>
+    </MotionPaper>
   );
 };
 

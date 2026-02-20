@@ -3,6 +3,7 @@ import { Grid, Box, Typography } from "@mui/material";
 import { COLORS } from "@/styles/theme";
 import TaskCard from "../organisms/task/TaskCard";
 import { useTasks } from "@/hooks/useTasks";
+import { AnimatePresence } from "framer-motion";
 
 const BoardPage = () => {
   const { tasks = [], removeTask, changeStatus } = useTasks();
@@ -71,19 +72,21 @@ const BoardPage = () => {
                 </Typography>
               </Box>
             ) : (
-              list.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  onDelete={removeTask}
-                  onMoveNext={(id, currentStatus) => {
-                    if (currentStatus === "todo")
-                      changeStatus(id, "in-progress");
-                    else if (currentStatus === "in-progress")
-                      changeStatus(id, "done");
-                  }}
-                />
-              ))
+              <AnimatePresence>
+                {list.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onDelete={removeTask}
+                    onMoveNext={(id, currentStatus) => {
+                      if (currentStatus === "todo")
+                        changeStatus(id, "in-progress");
+                      else if (currentStatus === "in-progress")
+                        changeStatus(id, "done");
+                    }}
+                  />
+                ))}
+              </AnimatePresence>
             )}
           </Box>
         </Grid>
