@@ -10,6 +10,7 @@ import VerifyOTPPage from "@/components/pages/Auth/VerifyOTPPage"; // New
 import BoardPage from "@/components/pages/BoardPage";
 import StatsPage from "@/components/pages/StatsPage";
 import AuthLayout from "@/components/templates/AuthLayout";
+import SocketInitializer from "@/components/molecules/SocketInitializer";
 
 const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -25,6 +26,7 @@ const App: React.FC = () => {
 
   return (
     <BrowserRouter>
+      <SocketInitializer />
       <Routes>
         {/* PUBLIC AUTH ROUTES */}
         <Route

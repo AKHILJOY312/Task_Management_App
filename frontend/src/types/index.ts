@@ -54,8 +54,8 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   dueDate: string | null;
-  assignedTo: assignedUser | null;
   createdBy: User;
+  boardId: string;
 }
 
 export interface AssignableMember {
