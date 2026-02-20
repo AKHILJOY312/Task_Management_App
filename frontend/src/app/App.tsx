@@ -13,7 +13,7 @@ import AuthLayout from "@/components/templates/AuthLayout";
 
 const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const { tasks } = useAppSelector((state) => state.task); // Assuming a tasks slice
+  const { tasks } = useAppSelector((state) => state.task);
 
   const filteredTasks = useMemo(
     () =>

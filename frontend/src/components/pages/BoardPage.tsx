@@ -8,13 +8,14 @@ import TaskCard from "../organisms/task/TaskCard";
 const BoardPage: React.FC<{ tasks: Task[] }> = ({ tasks }) => (
   <Grid container spacing={3}>
     {["Planned", "In Progress", "Completed"].map((status) => (
-      <Grid item xs={12} md={4} key={status}>
+      <Grid size={{ xs: 12, md: 4 }} key={status}>
         <Typography
           variant="overline"
           sx={{ fontWeight: 800, color: COLORS.primaryUI }}
         >
           {status} [{tasks.filter((t) => t.status === status).length}]
         </Typography>
+
         <Box
           sx={{
             minHeight: "60vh",
@@ -34,4 +35,5 @@ const BoardPage: React.FC<{ tasks: Task[] }> = ({ tasks }) => (
     ))}
   </Grid>
 );
+
 export default BoardPage;

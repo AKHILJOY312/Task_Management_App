@@ -15,12 +15,10 @@ import type { ViewType } from "@/types";
 interface LayoutProps {
   children: React.ReactNode;
   view: ViewType;
-  // REMOVE setView from here
-  searchQuery: string;
-  setSearchQuery: (q: string) => void;
-  onAddTask: () => void;
-  isLoggedIn: boolean;
-  setIsLoggedIn: (b: boolean) => void;
+
+  searchQuery?: string;
+  setSearchQuery?: (q: string) => void;
+  onAddTask?: () => void;
 }
 
 const Layout: React.FC<LayoutProps> = ({
@@ -29,8 +27,6 @@ const Layout: React.FC<LayoutProps> = ({
   searchQuery,
   setSearchQuery,
   onAddTask,
-  isLoggedIn,
-  setIsLoggedIn,
 }) => (
   <Box
     sx={{
@@ -43,7 +39,7 @@ const Layout: React.FC<LayoutProps> = ({
     }}
   >
     <CssBaseline />
-    <TopNav view={view} isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+    <TopNav />
 
     {/* Search bar only visible on board/stats */}
     {(view === "board" || view === "stats") && (
@@ -71,10 +67,11 @@ const Layout: React.FC<LayoutProps> = ({
               placeholder="SEARCH_DB..."
               fullWidth
               sx={{ ml: 1, fontFamily: MONO_FONT }}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={searchQuery ?? ""}
+              onChange={(e) => setSearchQuery?.(e.target.value)}
             />
           </Paper>
+          {/* {onAddTask && ( */}
           <Button
             variant="contained"
             onClick={onAddTask}
@@ -83,6 +80,7 @@ const Layout: React.FC<LayoutProps> = ({
           >
             NEW_TASK
           </Button>
+          {/* )} */}
         </Container>
       </Box>
     )}

@@ -73,6 +73,7 @@ const RegisterPage: React.FC = () => {
       borderBottomColor: "rgba(255,255,255,0.1)",
     },
   };
+  const displayError = (localError || error || "").toString().toUpperCase();
 
   return (
     <Box
@@ -132,17 +133,16 @@ const RegisterPage: React.FC = () => {
               fontSize: "0.7rem",
             }}
           >
-            {(localError || error).toUpperCase()}
+            {displayError}
           </Alert>
         )}
 
         <form onSubmit={handleSubmit}>
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 required
-                type="text"
                 name="name"
                 label="NAME"
                 variant="filled"
@@ -154,7 +154,8 @@ const RegisterPage: React.FC = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid size={12}>
               <TextField
                 fullWidth
                 required
@@ -169,7 +170,8 @@ const RegisterPage: React.FC = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 required
@@ -185,7 +187,8 @@ const RegisterPage: React.FC = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 required
@@ -201,7 +204,8 @@ const RegisterPage: React.FC = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid size={12}>
               <TextField
                 fullWidth
                 required

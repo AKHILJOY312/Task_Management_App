@@ -1,15 +1,17 @@
 // src/redux/slices/taskSlice.ts
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { Task } from "@/types";
+import type { Task, TaskStatus } from "@/types";
 
 interface TaskState {
   tasks: Task[];
   loading: boolean;
+  error: string;
 }
 
 const initialState: TaskState = {
   tasks: [],
   loading: false,
+  error: "",
 };
 
 const taskSlice = createSlice({
@@ -24,20 +26,15 @@ const taskSlice = createSlice({
       state,
       action: PayloadAction<{
         taskId: string;
-        newStatus: string;
+        newStatus: TaskStatus;
         userId: string;
       }>,
     ) => {
-      const { taskId, newStatus, userId } = action.payload;
+      const { taskId, newStatus } = action.payload;
       const task = state.tasks.find((t) => t.id === taskId);
 
       if (task) {
-        if (task.assignedTo === userId) {
-          task.status = newStatus;
-        } else {
-          console.error("PERMISSION_DENIED: ONLY_ASSIGNEE_CAN_MOVE_PHASE");
-          // In a real app, trigger a Toast notification here
-        }
+        task.status = newStatus;
       }
     },
     createTask: (state, action: PayloadAction<Task>) => {

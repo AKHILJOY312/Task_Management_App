@@ -1,21 +1,22 @@
 import React from "react";
 import { Box, Container, Typography, Tabs, Tab, Button } from "@mui/material";
-
-import { COLORS, MONO_FONT } from "@/styles/theme";
-
 import { useNavigate, useLocation } from "react-router-dom";
 
-interface TopNavProps {
-  isLoggedIn: boolean;
-  setIsLoggedIn: (b: boolean) => void;
-}
+import { COLORS, MONO_FONT } from "@/styles/theme";
+import { useAuth } from "@/hooks/useAuth";
 
-const TopNav: React.FC<TopNavProps> = ({ isLoggedIn, setIsLoggedIn }) => {
+const TopNav: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Highlight the tab based on the current URL
+  const { isAuthenticated, logout } = useAuth();
+
   const currentTab = location.pathname === "/stats" ? "stats" : "board";
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
 
   return (
     <Box sx={{ bgcolor: COLORS.primaryUI, color: "white" }}>
@@ -32,7 +33,7 @@ const TopNav: React.FC<TopNavProps> = ({ isLoggedIn, setIsLoggedIn }) => {
           onClick={() => navigate("/")}
           sx={{ cursor: "pointer", fontFamily: MONO_FONT }}
         >
-          TERMINAL_OS
+          Pixel_Task
         </Typography>
 
         <Tabs
@@ -47,12 +48,12 @@ const TopNav: React.FC<TopNavProps> = ({ isLoggedIn, setIsLoggedIn }) => {
         </Tabs>
 
         <Box>
-          {!isLoggedIn ? (
+          {!isAuthenticated ? (
             <Button onClick={() => navigate("/login")} color="inherit">
               LOGIN
             </Button>
           ) : (
-            <Button onClick={() => setIsLoggedIn(false)} color="inherit">
+            <Button onClick={handleLogout} color="inherit">
               LOGOUT
             </Button>
           )}

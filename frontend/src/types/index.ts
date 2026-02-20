@@ -46,7 +46,6 @@ export type assignedUser = {
   id: string;
   name: string;
   email: string;
-  avatarUrl: string;
 };
 export interface Task {
   id: string;
