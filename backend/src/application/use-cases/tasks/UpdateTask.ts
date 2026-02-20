@@ -29,7 +29,7 @@ export class UpdateTask implements IUpdateTask {
       title: task.title,
       description: task.description,
       status: task.status,
-      assignedTo: task.assignedTo,
+      // assignedTo: task.assignedTo,
       createdBy: task.createdBy,
       createdAt: task.createdAt,
     };

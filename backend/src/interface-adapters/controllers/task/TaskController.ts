@@ -48,7 +48,7 @@ export class TaskController {
 
   list = async (_req: Request, res: Response) => {
     const result = await this.listTasksUC.execute();
-    res.json(result);
+    res.json({ data: result });
   };
 
   update = async (req: Request, res: Response) => {

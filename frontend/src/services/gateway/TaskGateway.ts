@@ -2,7 +2,12 @@
 
 import { io, Socket } from "socket.io-client";
 import type { Task, TaskStatus } from "@/types/index";
-
+type TaskHandlers = {
+  onCreated?: (task: Task) => void;
+  onUpdated?: (task: Task) => void;
+  onDeleted?: (taskId: string) => void;
+  onStatus?: (payload: { taskId: string; status: TaskStatus }) => void;
+};
 type ServerToClientEvents = {
   "task:created": (task: Task) => void;
   "task:updated": (task: Task) => void;
@@ -88,22 +93,36 @@ class TaskGateway {
   /* ======================
         Subscriptions
   ====================== */
-
-  subscribe(handlers: TaskHandlers) {
+  subscribe(handlers: TaskHandlers = {}) {
     if (!this.socket) return;
 
-    const { onCreated, onUpdated, onDeleted, onStatus } = handlers;
+    const {
+      onCreated = () => {},
+      onUpdated = () => {},
+      onDeleted = () => {},
+      onStatus = () => {},
+    } = handlers;
 
-    this.socket.on("task:created", onCreated);
-    this.socket.on("task:updated", onUpdated);
-    this.socket.on("task:deleted", onDeleted);
-    this.socket.on("task:status", onStatus);
+    const handleCreated = (task: Task) => {
+      console.log("SOCKET task:created", task.id);
+      onCreated(task);
+    };
+
+    const handleUpdated = (task: Task) => onUpdated(task);
+    const handleDeleted = (taskId: string) => onDeleted(taskId);
+    const handleStatus = (payload: { taskId: string; status: TaskStatus }) =>
+      onStatus(payload);
+
+    this.socket.on("task:created", handleCreated);
+    this.socket.on("task:updated", handleUpdated);
+    this.socket.on("task:deleted", handleDeleted);
+    this.socket.on("task:status", handleStatus);
 
     return () => {
-      this.socket?.off("task:created", onCreated);
-      this.socket?.off("task:updated", onUpdated);
-      this.socket?.off("task:deleted", onDeleted);
-      this.socket?.off("task:status", onStatus);
+      this.socket?.off("task:created", handleCreated);
+      this.socket?.off("task:updated", handleUpdated);
+      this.socket?.off("task:deleted", handleDeleted);
+      this.socket?.off("task:status", handleStatus);
     };
   }
 }

@@ -40,6 +40,7 @@ export class TaskHandler extends BaseSocketHandler {
      */
     this.socket.on("task:create", async (payload) => {
       try {
+        console.log("Received task:create with payload:", payload);
         const validated = createTaskSchema.safeParse(payload);
 
         if (!validated.success) {

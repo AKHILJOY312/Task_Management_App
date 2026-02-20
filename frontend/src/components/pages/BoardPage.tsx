@@ -1,13 +1,11 @@
 import { useMemo } from "react";
 import { Grid, Box, Typography } from "@mui/material";
-
 import { COLORS } from "@/styles/theme";
 import TaskCard from "../organisms/task/TaskCard";
 import { useTasks } from "@/hooks/useTasks";
 
 const BoardPage = () => {
-  const boardId = "default";
-  const { tasks = [] } = useTasks(boardId); // defensive default
+  const { tasks = [] } = useTasks();
 
   const grouped = useMemo(() => {
     const map = {
@@ -18,7 +16,7 @@ const BoardPage = () => {
 
     for (const t of tasks) {
       if (t.status === "todo") map.Planned.push(t);
-      else if (t.status === "inprogress") map["In Progress"].push(t);
+      else if (t.status === "in-progress") map["In Progress"].push(t);
       else if (t.status === "done") map.Completed.push(t);
     }
 
@@ -28,37 +26,51 @@ const BoardPage = () => {
   const isEmpty = tasks.length === 0;
 
   return (
-    <Grid container spacing={3}>
+    <Grid container spacing={3} alignItems="stretch">
       {Object.entries(grouped).map(([status, list]) => (
         <Grid size={{ xs: 12, md: 4 }} key={status}>
-          <Typography
-            variant="overline"
-            sx={{ fontWeight: 800, color: COLORS.primaryUI }}
-          >
-            {status} [{list.length}]
-          </Typography>
+          <Box sx={{ mb: 1 }}>
+            <Typography
+              variant="overline"
+              sx={{
+                fontWeight: 800,
+                color: COLORS.primaryUI,
+                letterSpacing: 1,
+              }}
+            >
+              {status} [{list.length}]
+            </Typography>
+          </Box>
 
           <Box
             sx={{
-              minHeight: "60vh",
+              minHeight: "65vh",
               p: 2,
               bgcolor: "rgba(0,0,0,0.03)",
-              borderRadius: 4,
+              borderRadius: 3,
               border: `1px dashed ${COLORS.border}`,
               display: "flex",
               flexDirection: "column",
               gap: 2,
-              justifyContent: list.length === 0 ? "center" : "flex-start",
-              alignItems: "center",
+              alignItems: "stretch", // 🔥 important
             }}
           >
             {list.length === 0 ? (
-              <Typography
-                variant="body2"
-                sx={{ opacity: 0.6, fontStyle: "italic" }}
+              <Box
+                sx={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                No tasks
-              </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ opacity: 0.6, fontStyle: "italic" }}
+                >
+                  No tasks
+                </Typography>
+              </Box>
             ) : (
               list.map((task) => <TaskCard key={task.id} task={task} />)
             )}
@@ -67,14 +79,14 @@ const BoardPage = () => {
       ))}
 
       {isEmpty && (
-        <Grid size={12}>
+        <Grid size={{ xs: 12 }}>
           <Box
             sx={{
               mt: 4,
               p: 4,
               textAlign: "center",
               border: `1px dashed ${COLORS.border}`,
-              borderRadius: 4,
+              borderRadius: 3,
               bgcolor: "rgba(0,0,0,0.02)",
             }}
           >

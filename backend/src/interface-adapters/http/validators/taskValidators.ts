@@ -1,10 +1,9 @@
-// src/interface-adapters/http/validators/taskValidators.ts
 import { z } from "zod";
 
 export const createTaskSchema = z.object({
   title: z.string().min(3).max(100),
   description: z.string().min(5),
-  assignedTo: z.string().uuid("Invalid User ID format"),
+  status: z.enum(["todo", "in-progress", "done"] as const).optional(),
 });
 
 export const updateTaskSchema = z.object({

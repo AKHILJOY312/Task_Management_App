@@ -14,7 +14,8 @@ import {
 
 import { listTasks } from "@/services/task.service";
 
-export function useTasks(boardId: string | null) {
+export function useTasks() {
+  const boardId = useAppSelector((s) => s.board.currentBoardId);
   const dispatch = useAppDispatch();
   const tasks = useAppSelector((s) => s.task.tasks);
 

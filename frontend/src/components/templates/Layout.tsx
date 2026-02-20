@@ -11,16 +11,18 @@ import { Search, Add } from "@mui/icons-material";
 import { Outlet, useLocation } from "react-router-dom";
 import { COLORS, MONO_FONT } from "@/styles/theme";
 import TopNav from "./TopNav";
+import { useUi } from "@/hooks/useUi";
+import CreateTaskModal from "../molecules/CreateTaskModal";
 
 const Layout = () => {
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
-
+  const { openCreateTask } = useUi();
   const showSearch =
     location.pathname === "/" || location.pathname === "/stats";
 
   const handleAddTask = () => {
-    // trigger modal / navigation / redux action
+    openCreateTask();
     console.log("Add task clicked");
   };
 
@@ -85,6 +87,7 @@ const Layout = () => {
           <Outlet />
         </Container>
       </Box>
+      <CreateTaskModal />
     </Box>
   );
 };

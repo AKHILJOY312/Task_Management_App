@@ -8,6 +8,7 @@ interface TaskState {
   error: string | null;
   activeTask: Task | null;
   activeTaskId: string | null;
+  boardId: string | null;
 }
 
 const initialState: TaskState = {
@@ -16,6 +17,7 @@ const initialState: TaskState = {
   error: null,
   activeTask: null,
   activeTaskId: null,
+  boardId: null,
 };
 
 const taskSlice = createSlice({
@@ -46,7 +48,9 @@ const taskSlice = createSlice({
         }
       }
     },
-
+    setBoardId: (state, action: PayloadAction<string | null>) => {
+      state.boardId = action.payload;
+    },
     setActiveTask: (state, action: PayloadAction<string | null>) => {
       state.activeTaskId = action.payload;
       state.activeTask =
@@ -54,7 +58,10 @@ const taskSlice = createSlice({
     },
 
     createTask: (state, action: PayloadAction<Task>) => {
-      state.tasks.push(action.payload);
+      const exists = state.tasks.some((t) => t.id === action.payload.id);
+      if (!exists) {
+        state.tasks.push(action.payload);
+      }
     },
     updateTask: (state, action: PayloadAction<Task>) => {
       const index = state.tasks.findIndex((t) => t.id === action.payload.id);
