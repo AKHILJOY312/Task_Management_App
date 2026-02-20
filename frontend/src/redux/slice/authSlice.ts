@@ -9,11 +9,6 @@ import {
 } from "../thunk/authThunks";
 import type { AuthState } from "@/types";
 import { tokenService } from "@/utils/tokenService";
-import {
-  updateUserProfile,
-  uploadProfileImage,
-  verifyOtpAndUpdateEmail,
-} from "./userSlice";
 
 const initialState: AuthState = {
   user: null,
@@ -50,6 +45,12 @@ const authSlice = createSlice({
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
         state.message = action.payload.message;
+
+        state.user = {
+          id: "",
+          name: "",
+          email: action.payload.email,
+        };
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
@@ -103,23 +104,6 @@ const authSlice = createSlice({
         tokenService.clearToken();
       })
 
-      .addCase(updateUserProfile.fulfilled, (state, action) => {
-        if (state.user) {
-          state.user.name = action.payload.name;
-        }
-        state.loading = false;
-      })
-      .addCase(uploadProfileImage.fulfilled, (state, action) => {
-        if (state.user) {
-          state.user.avatarUrl = action.payload;
-        }
-        state.loading = false;
-      })
-      .addCase(verifyOtpAndUpdateEmail.fulfilled, (state, action) => {
-        if (state.user) {
-          state.user.email = action.payload;
-        }
-      })
       .addCase(loginSuccess.fulfilled, (state, action) => {
         state.accessToken = action.payload.token;
         state.isAuthenticated = true;

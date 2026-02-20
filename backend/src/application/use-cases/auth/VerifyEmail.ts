@@ -15,7 +15,7 @@ export class VerifyEmail implements IVerifyEmail {
   async execute(dto: VerifyEmailDto): Promise<{ message: string }> {
     const user = await this.userRepo.findByEmail(dto.email);
 
-    if (!user || user.otpCode !== dto.otpCode) {
+    if (!user || user.otpCode !== dto.otp) {
       throw new BadRequestError("INVALID_VERIFICATION_CODE");
     }
 

@@ -20,11 +20,11 @@ export class AccessKeyRepository implements IAccessKeyRepository {
     const result = await AccessKeyModel.findOneAndUpdate(
       {
         key: key,
-        isUsed: false,
+        // isUsed: false,
       },
       {
         $set: {
-          isUsed: true,
+          // isUsed: true,
           usedBy: userEmail.toLowerCase(),
           updatedAt: new Date(),
         },
@@ -37,7 +37,7 @@ export class AccessKeyRepository implements IAccessKeyRepository {
   async generateNewKey(key: string): Promise<AccessKey> {
     const doc = await AccessKeyModel.create({
       key,
-      isUsed: false,
+      // isUsed: false,
     });
 
     return new AccessKey({

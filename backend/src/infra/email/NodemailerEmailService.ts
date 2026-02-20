@@ -47,7 +47,7 @@ export class NodemailerEmailService implements IEmailService {
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background: #f9f9f9;">
         <h2 style="color: #1a73e8; text-align: center;">Verify Your Account</h2>
         <p style="text-align: center; font-size: 16px; color: #555;">
-          Thank you for joining Astra. Please use the following 6-digit code to complete your registration:
+          Thank you for joining Pixel_Tasks. Please use the following 6-digit code to complete your registration:
         </p>
         <div style="text-align: center; margin: 30px 0;">
           <span style="display: inline-block; font-size: 36px; font-weight: bold; letter-spacing: 10px; background: #ffffff; padding: 15px 30px; border-radius: 8px; color: #1a73e8; border: 2px solid #1a73e8;">
@@ -59,7 +59,7 @@ export class NodemailerEmailService implements IEmailService {
         </p>
         <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
         <p style="text-align: center; font-size: 12px; color: #aaa;">
-          &copy; ${new Date().getFullYear()} Astra Task Management. All rights reserved.
+          &copy; ${new Date().getFullYear()} Pixel_Tasks Task Management. All rights reserved.
         </p>
       </div>
     `;
@@ -70,7 +70,7 @@ export class NodemailerEmailService implements IEmailService {
    */
   async sendEmailOtp(email: string, otp: string): Promise<void> {
     const mailOptions: SendMailOptions = {
-      from: `"Astra Team" <${this.fromEmail}>`,
+      from: `"Pixel_Tasks Team" <${this.fromEmail}>`,
       to: email,
       subject: `Your Verification Code: ${otp}`,
       html: this.getOtpTemplate(otp),

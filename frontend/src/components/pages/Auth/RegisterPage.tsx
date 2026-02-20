@@ -22,6 +22,7 @@ const RegisterPage: React.FC = () => {
   const { loading, error } = useAppSelector((state) => state.auth);
 
   const [formData, setFormData] = useState({
+    name: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -50,8 +51,10 @@ const RegisterPage: React.FC = () => {
     // On success, the thunk should update state to trigger navigation to /verify-email
     const result = await dispatch(
       registerUser({
+        name: formData.name,
         email: formData.email,
         password: formData.password,
+        confirmPassword: formData.confirmPassword,
         accessKey: formData.accessKey,
       }),
     );
@@ -143,7 +146,7 @@ const RegisterPage: React.FC = () => {
                 name="name"
                 label="NAME"
                 variant="filled"
-                value={formData.confirmPassword}
+                value={formData.name}
                 onChange={handleChange}
                 InputProps={{ sx: inputStyles }}
                 InputLabelProps={{

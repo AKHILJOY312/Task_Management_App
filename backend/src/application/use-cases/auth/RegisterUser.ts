@@ -26,7 +26,9 @@ export class RegisterUser implements IRegisterUser {
     private accessKeyRepo: IAccessKeyRepository,
   ) {}
 
-  async execute(dto: RegisterUserDto): Promise<{ message: string }> {
+  async execute(
+    dto: RegisterUserDto,
+  ): Promise<{ message: string; email: string }> {
     // 1. Validate Access Key (Gatekeeper)
     const isValidKey = await this.accessKeyRepo.validateAndUse(
       dto.accessKey,
@@ -57,6 +59,9 @@ export class RegisterUser implements IRegisterUser {
     await this.userRepo.create(user);
     await this.email.sendEmailOtp(user.email, otp);
 
-    return { message: "REGISTRATION_SUCCESS_CHECK_EMAIL_FOR_OTP" };
+    return {
+      message: "REGISTRATION_SUCCESS_CHECK_EMAIL_FOR_OTP",
+      email: user.email,
+    };
   }
 }

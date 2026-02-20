@@ -24,22 +24,22 @@ interface LoginResponse {
 }
 interface RegisterResponse {
   message: string;
+  email: string;
 }
 
 interface VerifyEmailResponse {
-  message?: string;
-  user?: User;
+  otp: string;
 }
 // Resolve singletons
 
 export const loginUser = createAsyncThunk<
   LoginResponse,
-  { email: string; password: string; isAdminLogin?: boolean },
+  { email: string; password: string },
   { rejectValue: string }
 >(
   "auth/login",
   async (
-    credentials: { email: string; password: string; isAdminLogin?: boolean },
+    credentials: { email: string; password: string },
     { rejectWithValue },
   ) => {
     try {
@@ -69,7 +69,13 @@ export const loadUser = createAsyncThunk<User, void, { rejectValue: string }>(
 
 export const registerUser = createAsyncThunk<
   RegisterResponse,
-  { name: string; email: string; password: string; confirmPassword: string },
+  {
+    name: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+    accessKey: string;
+  },
   { rejectValue: string }
 >(
   "auth/register",
@@ -79,6 +85,7 @@ export const registerUser = createAsyncThunk<
       email: string;
       password: string;
       confirmPassword: string;
+      accessKey: string;
     },
     { rejectWithValue },
   ) => {
@@ -108,11 +115,11 @@ export const logoutUser = createAsyncThunk<void, void, { rejectValue: string }>(
 
 export const verifyEmailOTP = createAsyncThunk<
   VerifyEmailResponse,
-  string,
+  { email: string; otp: string },
   { rejectValue: string }
->("auth/verifyEmail", async (token: string, { rejectWithValue }) => {
+>("auth/verifyEmail", async ({ email, otp }, { rejectWithValue }) => {
   try {
-    const result = await verifyUserEmail(token);
+    const result = await verifyUserEmail({ email, otp });
     return result.data;
   } catch (e) {
     const error = e as ApiError;

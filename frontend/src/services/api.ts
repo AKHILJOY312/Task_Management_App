@@ -72,10 +72,10 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const { data } = await api.post(
-          "/auth/refresh-token",
+        const { data } = await api.put(
+          "/auth/sessions/current",
           {},
-          { withCredentials: true }
+          { withCredentials: true },
         );
         const newToken = data.accessToken;
         if (onTokenRefresh) {
@@ -95,7 +95,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;

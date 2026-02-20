@@ -26,5 +26,5 @@ export const registerSchema = z
 
 export const verifyEmailSchema = z.object({
   email: z.string().email(),
-  otpCode: otpSchema,
+  otp: otpSchema,
 });

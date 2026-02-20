@@ -23,7 +23,7 @@ export interface RegisterUserDto {
 
 export interface VerifyEmailDto {
   email: string;
-  otpCode: string; // The 6-digit numeric code
+  otp: string; // The 6-digit numeric code
 }
 
 export interface GetMeResponseDTO {

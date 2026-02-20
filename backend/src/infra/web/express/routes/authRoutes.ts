@@ -13,21 +13,25 @@ export function getAuthRoutes(container: Container): Router {
   const protect = container.get<ReturnType<typeof createProtectMiddleware>>(
     TYPES.ProtectMiddleware,
   );
-  // --- Public Routes ---
 
-  router.post("/register", asyncHandler(authController.register));
+  // -------- Users --------
 
-  router.post("/verify-email", asyncHandler(authController.verifyEmail));
+  router.route("/users").post(asyncHandler(authController.register)); // create user
 
-  router.post("/login", asyncHandler(authController.login));
+  router
+    .route("/users/verify-email")
+    .patch(asyncHandler(authController.verifyEmail)); // update verification state
 
-  router.post("/refresh", asyncHandler(authController.refreshToken));
+  router.route("/users/me").get(protect, asyncHandler(authController.me)); // current user
 
-  router.post("/logout", asyncHandler(authController.logout));
+  // -------- Sessions --------
 
-  // --- Protected Routes ---
+  router.route("/sessions").post(asyncHandler(authController.login)); // login (create session)
 
-  router.get("/me", protect, asyncHandler(authController.me));
+  router
+    .route("/sessions/current")
+    .put(asyncHandler(authController.refreshToken)) // refresh token
+    .delete(protect, asyncHandler(authController.logout)); // logout
 
   return router;
 }
