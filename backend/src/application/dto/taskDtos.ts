@@ -14,7 +14,7 @@ export interface UpdateTaskDto {
 }
 
 export interface MoveTaskPhaseDto {
-  id: string;
+  taskId: string;
   newStatus: TaskStatus;
 }
 

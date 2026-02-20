@@ -12,7 +12,7 @@ type ServerToClientEvents = {
   "task:created": (task: Task) => void;
   "task:updated": (task: Task) => void;
   "task:deleted": (taskId: string) => void;
-  "task:moved": (payload: { taskId: string; status: TaskStatus }) => void;
+  "task:moved": (task: Task) => void;
   "task:status": (payload: { taskId: string; status: TaskStatus }) => void;
 };
 
@@ -20,7 +20,7 @@ type ClientToServerEvents = {
   "task:create": (payload: Partial<Task>) => void;
   "task:update": (payload: Task) => void;
   "task:delete": (taskId: string) => void;
-  "task:move": (payload: { taskId: string; status: TaskStatus }) => void;
+  "task:move": (payload: { taskId: string; newStatus: TaskStatus }) => void;
   "board:join": (boardId: string) => void;
   "board:leave": (boardId: string) => void;
 };
@@ -86,8 +86,8 @@ class TaskGateway {
     this.socket?.emit("task:delete", taskId);
   }
 
-  moveTask(taskId: string, status: TaskStatus) {
-    this.socket?.emit("task:move", { taskId, status });
+  moveTask(taskId: string, newStatus: TaskStatus) {
+    this.socket?.emit("task:move", { taskId, newStatus });
   }
 
   /* ======================
@@ -100,7 +100,6 @@ class TaskGateway {
       onCreated = () => {},
       onUpdated = () => {},
       onDeleted = () => {},
-      onStatus = () => {},
     } = handlers;
 
     const handleCreated = (task: Task) => {
@@ -110,19 +109,20 @@ class TaskGateway {
 
     const handleUpdated = (task: Task) => onUpdated(task);
     const handleDeleted = (taskId: string) => onDeleted(taskId);
-    const handleStatus = (payload: { taskId: string; status: TaskStatus }) =>
-      onStatus(payload);
-
+    const handleStatus = (task: Task) => {
+      console.log("🛰️ SOCKET task:moved RECEIVED:", task);
+      onUpdated(task); // treat like update
+    };
     this.socket.on("task:created", handleCreated);
     this.socket.on("task:updated", handleUpdated);
     this.socket.on("task:deleted", handleDeleted);
-    this.socket.on("task:status", handleStatus);
+    this.socket.on("task:moved", handleStatus);
 
     return () => {
       this.socket?.off("task:created", handleCreated);
       this.socket?.off("task:updated", handleUpdated);
       this.socket?.off("task:deleted", handleDeleted);
-      this.socket?.off("task:status", handleStatus);
+      this.socket?.off("task:moved", handleStatus);
     };
   }
 }

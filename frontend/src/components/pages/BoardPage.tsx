@@ -5,8 +5,7 @@ import TaskCard from "../organisms/task/TaskCard";
 import { useTasks } from "@/hooks/useTasks";
 
 const BoardPage = () => {
-  const { tasks = [] } = useTasks();
-
+  const { tasks = [], removeTask, changeStatus } = useTasks();
   const grouped = useMemo(() => {
     const map = {
       Planned: [] as typeof tasks,
@@ -52,7 +51,7 @@ const BoardPage = () => {
               display: "flex",
               flexDirection: "column",
               gap: 2,
-              alignItems: "stretch", // 🔥 important
+              alignItems: "stretch", //  important
             }}
           >
             {list.length === 0 ? (
@@ -72,7 +71,19 @@ const BoardPage = () => {
                 </Typography>
               </Box>
             ) : (
-              list.map((task) => <TaskCard key={task.id} task={task} />)
+              list.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onDelete={removeTask}
+                  onMoveNext={(id, currentStatus) => {
+                    if (currentStatus === "todo")
+                      changeStatus(id, "in-progress");
+                    else if (currentStatus === "in-progress")
+                      changeStatus(id, "done");
+                  }}
+                />
+              ))
             )}
           </Box>
         </Grid>

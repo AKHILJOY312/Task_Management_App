@@ -31,7 +31,7 @@ export function getTasksRoutes(container: Container): Router {
     .delete(asyncHandler(taskController.delete));
 
   // --- Sub-Resource for State Transitions ---
-  router.route("/:id/phase").patch(asyncHandler(taskController.movePhase));
+  // router.route("/:id/phase").patch(asyncHandler(taskController.movePhase));
 
   return router;
 }

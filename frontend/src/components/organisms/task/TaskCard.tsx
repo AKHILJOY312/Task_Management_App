@@ -1,5 +1,15 @@
 import React from "react";
-import { Paper, Typography, Box, Chip } from "@mui/material";
+import {
+  Paper,
+  Typography,
+  Box,
+  Chip,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+
 import { COLORS, MONO_FONT } from "@/styles/theme";
 import type { Task } from "@/types";
 
@@ -8,9 +18,22 @@ const statusColorMap = {
   "in-progress": "#FF9B51",
   done: "#4CAF50",
 };
+type TaskCardProps = {
+  task: Task;
+  onDelete: (taskId: string) => void;
+  onMoveNext: (taskId: string, status: Task["status"]) => void;
+};
 
-const TaskCard: React.FC<{ task: Task }> = ({ task }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ task, onDelete, onMoveNext }) => {
   const formattedDate = new Date(task.createdAt).toLocaleDateString();
+
+  const handleDelete = () => {
+    onDelete(task.id);
+  };
+
+  const handleMoveNext = () => {
+    onMoveNext(task.id, task.status);
+  };
 
   return (
     <Paper
@@ -24,19 +47,72 @@ const TaskCard: React.FC<{ task: Task }> = ({ task }) => {
         display: "flex",
         flexDirection: "column",
         gap: 1,
+        position: "relative",
+        transition: "0.2s",
+        "&:hover": {
+          borderColor: COLORS.primaryUI,
+          transform: "translateY(-2px)",
+        },
+        "&:hover .task-actions": {
+          opacity: 1,
+        },
       }}
     >
+      {/* ACTION ICONS */}
+      <Box
+        className="task-actions"
+        sx={{
+          position: "absolute",
+          top: 6,
+          right: 6,
+          display: "flex",
+          gap: 0.5,
+          opacity: 0,
+          transition: "opacity 0.2s ease",
+        }}
+      >
+        {task.status !== "done" && (
+          <Tooltip title="Move to next phase">
+            <IconButton
+              size="small"
+              onClick={handleMoveNext}
+              sx={{
+                color: COLORS.primaryUI,
+                "&:hover": { bgcolor: "rgba(255,255,255,0.05)" },
+              }}
+            >
+              <ArrowForwardIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
+        )}
+        <Tooltip title="Delete task">
+          <IconButton
+            size="small"
+            onClick={handleDelete}
+            sx={{
+              color: "#FF6B6B",
+              "&:hover": { bgcolor: "rgba(255,0,0,0.05)" },
+            }}
+          >
+            <DeleteOutlineIcon fontSize="inherit" />
+          </IconButton>
+        </Tooltip>
+      </Box>
+
+      {/* TITLE */}
       <Typography
         variant="subtitle2"
         sx={{
           fontFamily: MONO_FONT,
           fontWeight: 700,
           lineHeight: 1.3,
+          pr: 5,
         }}
       >
         {task.title.toUpperCase()}
       </Typography>
 
+      {/* DESCRIPTION */}
       {task.description && (
         <Typography
           variant="body2"
@@ -50,6 +126,7 @@ const TaskCard: React.FC<{ task: Task }> = ({ task }) => {
         </Typography>
       )}
 
+      {/* FOOTER */}
       <Box
         sx={{
           display: "flex",

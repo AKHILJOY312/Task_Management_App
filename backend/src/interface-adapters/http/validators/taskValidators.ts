@@ -13,7 +13,7 @@ export const updateTaskSchema = z.object({
 });
 
 export const moveTaskSchema = z.object({
-  id: z.string().uuid(),
+  taskId: z.string(),
   newStatus: z.enum(["todo", "in-progress", "done"] as const, {
     message: "INVALID_PHASE_SIGNAL",
   }),

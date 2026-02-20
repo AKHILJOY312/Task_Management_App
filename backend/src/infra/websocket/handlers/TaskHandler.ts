@@ -84,6 +84,10 @@ export class TaskHandler extends BaseSocketHandler {
         const validated = moveTaskSchema.safeParse(payload);
 
         if (!validated.success) {
+          console.error(
+            "Validation failed for task:move payload:",
+            validated.error.issues,
+          );
           throw new ValidationError(validated.error.issues[0].message);
         }
 
@@ -100,15 +104,14 @@ export class TaskHandler extends BaseSocketHandler {
     /**
      * DELETE
      */
-    this.socket.on("task:delete", async (payload: { id: string }) => {
+    this.socket.on("task:delete", async (taskId: string) => {
       try {
-        if (!payload?.id) {
+        if (!taskId) {
           throw new BadRequestError("Task id required");
         }
+        await deleteTaskUC.execute(taskId);
 
-        await deleteTaskUC.execute(payload.id);
-
-        this.io.emit("task:deleted", payload.id);
+        this.io.emit("task:deleted", taskId);
       } catch (err) {
         this.emitError(err);
       }

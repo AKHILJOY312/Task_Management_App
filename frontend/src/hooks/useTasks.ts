@@ -51,6 +51,7 @@ export function useTasks() {
   };
 
   const removeTask = (taskId: string) => {
+    console.log("Removing task with ID:", taskId);
     taskGateway.deleteTask(taskId);
   };
 
