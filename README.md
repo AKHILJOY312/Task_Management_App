@@ -164,8 +164,8 @@ This ensures:
 
 ## 1. Clone Repository
 
-    git clone <repo-url>
-    cd project-folder
+    git clone https://github.com/AKHILJOY312/Task_Management_App.git
+    cd Task_Management_App
 
 ## 2. Backend Setup
 
@@ -219,16 +219,6 @@ WebSocket integration enables:
 - Live task updates
 - Notifications
 - Multi-user synchronization
-
----
-
-# 🧪 Testing (Optional Extension)
-
-Recommended tools:
-
-- Jest
-- Supertest
-- React Testing Library
 
 ---
 
