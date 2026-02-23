@@ -1,8 +1,8 @@
-import React from "react";
 import { Box, Container, CssBaseline } from "@mui/material";
+import { Outlet } from "react-router-dom";
 import { COLORS } from "@/styles/theme";
 
-const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+const AuthLayout = () => (
   <Box
     sx={{
       minHeight: "100vh",
@@ -13,7 +13,10 @@ const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     }}
   >
     <CssBaseline />
-    <Container maxWidth="sm">{children}</Container>
+    <Container maxWidth="sm">
+      <Outlet />
+    </Container>
   </Box>
 );
+
 export default AuthLayout;

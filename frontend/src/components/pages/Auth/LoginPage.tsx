@@ -190,21 +190,6 @@ const LoginPage: React.FC = () => {
           >
             CREATE_NEW_ID
           </Link>
-          <Link
-            component="button"
-            variant="body2"
-            onClick={() => {
-              /* Forgot Password Logic */
-            }}
-            sx={{
-              color: "rgba(255,255,255,0.4)",
-              fontFamily: MONO_FONT,
-              fontSize: "0.7rem",
-              textDecoration: "none",
-            }}
-          >
-            RECOVERY_MODE
-          </Link>
         </Box>
       </Paper>
     </Box>

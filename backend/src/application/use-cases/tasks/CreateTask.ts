@@ -21,10 +21,10 @@ export class CreateTask implements ICreateTask {
       title: dto.title,
       description: dto.description,
       status: "todo",
-      assignedTo: dto.assignedTo,
+      // assignedTo: dto.assignedTo,
       createdBy: creatorId,
     });
-
+    console.log("Creating task with data:");
     const savedTask = await this.taskRepo.create(task);
 
     return this.mapToDto(savedTask);
@@ -36,7 +36,7 @@ export class CreateTask implements ICreateTask {
       title: task.title,
       description: task.description,
       status: task.status,
-      assignedTo: task.assignedTo,
+      // assignedTo: task.assignedTo,
       createdBy: task.createdBy,
       createdAt: task.createdAt,
     };

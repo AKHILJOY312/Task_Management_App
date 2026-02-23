@@ -1,181 +1,69 @@
-import { useCallback } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import type { RootState, AppDispatch } from "@/redux/store/store";
+import { useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+
+import { taskGateway } from "@/services/gateway/TaskGateway";
+import type { Task, TaskStatus } from "@/types/index";
+
 import {
   setTasks,
-  addTask,
+  createTask,
+  deleteTask,
   updateTask,
-  removeTask,
-  setTaskLoading,
-  setTaskError,
-  clearTaskError,
-  updateTaskStatusLocally,
-  setActiveTask,
-} from "@/redux/slice/taskSlice";
-import {
-  UserCreateTask,
-  listTasks,
   updateTaskStatus,
-  deleteTask as deleteTaskApi,
-  searchProjectMembers,
-  // requestTaskAttachmentUploadUrl,
-  UserEditTask,
-} from "@/services/task.service";
-import type {
-  CreateTaskRequest,
-  UpdateTaskStatusRequest,
-  SearchMembersRequest,
-  EditTaskRequest,
-  Task,
-} from "@/types";
-import axios from "axios";
+} from "@/redux/slice/taskSlice";
 
-export const useTasks = (projectId: string) => {
-  const dispatch = useDispatch<AppDispatch>();
+import { listTasks } from "@/services/task.service";
 
-  const { tasks, loading, error, activeTask, activeTaskId, isManager } =
-    useSelector((state: RootState) => state.task);
+export function useTasks() {
+  const boardId = useAppSelector((s) => s.board.currentBoardId);
+  const dispatch = useAppDispatch();
+  const tasks = useAppSelector((s) => s.task.tasks);
 
-  // ---------------------------
-  // Load Tasks
-  // ---------------------------
-  const loadTasks = useCallback(async () => {
-    dispatch(setTaskLoading());
+  useEffect(() => {
+    if (!boardId) return;
 
-    try {
-      const response = await listTasks(projectId);
-      dispatch(setTasks(response.data.data));
-    } catch (err) {
-      console.error(err);
-      dispatch(setTaskError("Failed to load tasks"));
-    }
-  }, [dispatch, projectId]);
+    listTasks().then((res) => {
+      dispatch(setTasks(res.data.data));
+    });
 
-  // ---------------------------
-  // Create Task
-  // ---------------------------
-  const createTask = async (payload: CreateTaskRequest) => {
-    dispatch(clearTaskError());
+    taskGateway.joinBoard(boardId);
 
-    try {
-      const response = await UserCreateTask(projectId, payload);
-      dispatch(addTask(response.data.data));
-      return response.data.data;
-    } catch (err) {
-      let message = "Failed to create task";
+    const unsubscribe = taskGateway.subscribe({
+      onCreated: (task: Task) => dispatch(createTask(task)),
+      onUpdated: (task: Task) => dispatch(updateTask(task)),
+      onDeleted: (taskId: string) => dispatch(deleteTask(taskId)),
+      onStatus: ({ taskId, status }) =>
+        dispatch(updateTaskStatus({ taskId, newStatus: status })),
+    });
 
-      if (axios.isAxiosError(err)) {
-        message = err.response?.data?.message || message;
-      }
+    return () => {
+      unsubscribe?.();
+      taskGateway.leaveBoard(boardId);
+    };
+  }, [boardId, dispatch]);
 
-      dispatch(setTaskError(message));
-      throw err;
-    }
+  const addTask = (data: Partial<Task>) => {
+    taskGateway.createTask(data);
   };
 
-  // ---------------------------
-  // Update Task (Full Update)
-  // ---------------------------
-  const updateTaskAsync = async (taskId: string, payload: EditTaskRequest) => {
-    dispatch(clearTaskError());
-    try {
-      // 1. Call the API
-      const response = await UserEditTask(taskId, payload);
-
-      // 2. Update Redux state with the returned data
-      const updatedTask = response.data.data;
-      dispatch(updateTask(updatedTask));
-
-      return updatedTask;
-    } catch (err) {
-      console.error(err);
-      dispatch(setTaskError("Failed to update task"));
-      throw err;
-    }
+  const editTask = (task: Task) => {
+    taskGateway.updateTask(task);
   };
 
-  // ---------------------------
-  // Update Task Status (Kanban)
-  // ---------------------------
-  const changeTaskStatus = async (
-    taskId: string,
-    payload: UpdateTaskStatusRequest,
-  ) => {
-    // Optimistic update
-    dispatch(
-      updateTaskStatusLocally({
-        taskId,
-        status: payload.status,
-      }),
-    );
-
-    try {
-      await updateTaskStatus(taskId, payload);
-    } catch (err) {
-      console.error(err);
-      dispatch(setTaskError("Failed to update task status"));
-      throw err;
-    }
+  const removeTask = (taskId: string) => {
+    console.log("Removing task with ID:", taskId);
+    taskGateway.deleteTask(taskId);
   };
 
-  // ---------------------------
-  // Delete Task
-  // ---------------------------
-  const deleteTaskAsync = async (taskId: string) => {
-    try {
-      await deleteTaskApi(taskId);
-      dispatch(removeTask(taskId));
-    } catch (err) {
-      console.error(err);
-      dispatch(setTaskError("Failed to delete task"));
-      throw err;
-    }
+  const changeStatus = (taskId: string, status: TaskStatus) => {
+    taskGateway.moveTask(taskId, status);
   };
-
-  // ---------------------------
-  // Active Task
-  // ---------------------------
-  const openTask = (task: Task) => {
-    dispatch(setActiveTask(task));
-  };
-
-  const closeTask = () => {
-    dispatch(setActiveTask(null));
-  };
-
-  // ---------------------------
-  // Members Search (Assign)
-  // ---------------------------
-  const searchMembers = useCallback(async (payload: SearchMembersRequest) => {
-    return await searchProjectMembers(payload);
-  }, []);
-
-  // ---------------------------
-  // Attachments
-  // ---------------------------
-
-  // const getAttachmentUploadUrl = async (payload: any) => {
-  //   return await requestTaskAttachmentUploadUrl(projectId, payload);
-  // };
 
   return {
     tasks,
-    loading,
-    error,
-    activeTask,
-    activeTaskId,
-    isManager,
-
-    loadTasks,
-    createTask,
-    updateTask: updateTaskAsync,
-    changeTaskStatus,
-    deleteTask: deleteTaskAsync,
-
-    openTask,
-    closeTask,
-    searchMembers,
-    // getAttachmentUploadUrl,
-    clearError: () => dispatch(clearTaskError()),
+    addTask,
+    editTask,
+    removeTask,
+    changeStatus,
   };
-};
+}

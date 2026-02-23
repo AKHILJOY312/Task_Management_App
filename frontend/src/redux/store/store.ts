@@ -7,10 +7,13 @@ import authReducer from "../slice/authSlice";
 
 import userReducer from "../slice/userSlice";
 import taskReducer from "../slice/taskSlice";
+import uiReducer from "../slice/uiSlice";
+import boardReducer from "../slice/boardSlice";
 
 const rootReducer = combineReducers({
   auth: authReducer,
-
+  ui: uiReducer,
+  board: boardReducer,
   user: userReducer,
   task: taskReducer,
 });

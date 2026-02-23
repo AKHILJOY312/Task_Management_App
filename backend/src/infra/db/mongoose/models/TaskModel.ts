@@ -7,7 +7,6 @@ export interface TaskDoc extends Document {
   title: string;
   description: string;
   status: TaskStatus;
-  assignedTo: string; // Stored as string ID
   createdBy: string; // Stored as string ID
   isDeleted: boolean;
   deletedAt?: Date | null;
@@ -25,7 +24,7 @@ const taskSchema = new Schema<TaskDoc>(
       default: "todo",
       index: true,
     },
-    assignedTo: { type: String, required: true, index: true },
+
     createdBy: { type: String, required: true },
     isDeleted: { type: Boolean, default: false, index: true },
     deletedAt: { type: Date, default: null },
@@ -42,7 +41,6 @@ export const toTaskEntity = (doc: TaskDoc): Task => {
     title: doc.title,
     description: doc.description,
     status: doc.status,
-    assignedTo: doc.assignedTo,
     createdBy: doc.createdBy,
     createdAt: doc.createdAt,
   };

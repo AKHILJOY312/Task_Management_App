@@ -4,7 +4,7 @@ import { TaskStatus } from "@/entities/Task";
 export interface CreateTaskDto {
   title: string;
   description: string;
-  assignedTo: string; // ID of the user being assigned
+  status?: TaskStatus;
 }
 
 export interface UpdateTaskDto {
@@ -14,7 +14,7 @@ export interface UpdateTaskDto {
 }
 
 export interface MoveTaskPhaseDto {
-  id: string;
+  taskId: string;
   newStatus: TaskStatus;
 }
 
@@ -23,7 +23,7 @@ export interface TaskResponseDto {
   title: string;
   description: string;
   status: TaskStatus;
-  assignedTo: string;
+  // assignedTo: string;
   createdBy: string;
   createdAt: Date;
 }

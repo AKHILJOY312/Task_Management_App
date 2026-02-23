@@ -14,16 +14,14 @@ export class MoveTaskPhase implements IMoveTaskPhase {
 
   async execute(
     dto: MoveTaskPhaseDto,
-    userId: string,
+    // userId: string,
   ): Promise<TaskResponseDto> {
-    const task = await this.taskRepo.findById(dto.id);
+    const task = await this.taskRepo.findById(dto.taskId);
 
     if (!task) throw new NotFoundError("TASK_NOT_FOUND");
 
-    // PRO RULE: Business logic validation
-    // We use the entity's internal logic to check permissions
     try {
-      task.moveToPhase(dto.newStatus, userId);
+      task.moveToPhase(dto.newStatus);
     } catch (error: any) {
       throw new ForbiddenError(error.message);
     }
@@ -35,7 +33,7 @@ export class MoveTaskPhase implements IMoveTaskPhase {
       title: task.title,
       description: task.description,
       status: task.status,
-      assignedTo: task.assignedTo,
+      // assignedTo: task.assignedTo,
       createdBy: task.createdBy,
       createdAt: task.createdAt,
     };

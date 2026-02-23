@@ -15,7 +15,7 @@ export class TaskRepository implements ITaskRepository {
       title: task.title,
       description: task.description,
       status: task.status,
-      assignedTo: task.assignedTo,
+      // assignedTo: task.assignedTo,
       createdBy: task.createdBy,
     };
   }

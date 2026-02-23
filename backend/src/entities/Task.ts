@@ -6,7 +6,6 @@ export interface TaskProps {
   title: string;
   description: string;
   status: TaskStatus;
-  assignedTo: string; // User ID
   createdBy: string; // User ID
   createdAt?: Date;
 }
@@ -27,9 +26,7 @@ export class Task {
   get status() {
     return this._props.status;
   }
-  get assignedTo() {
-    return this._props.assignedTo;
-  }
+
   get description(): string {
     return this._props.description;
   }
@@ -44,10 +41,10 @@ export class Task {
   }
 
   // BUSINESS METHOD: Restricted status update
-  moveToPhase(newStatus: TaskStatus, userId: string): void {
-    if (this._props.assignedTo !== userId) {
-      throw new Error("PERMISSION_DENIED: ONLY_ASSIGNEE_CAN_MOVE_TASK");
-    }
+  moveToPhase(newStatus: TaskStatus): void {
+    // if (this._props.assignedTo !== userId) {
+    //   throw new Error("PERMISSION_DENIED: ONLY_ASSIGNEE_CAN_MOVE_TASK");
+    // }
     this._props.status = newStatus;
   }
 

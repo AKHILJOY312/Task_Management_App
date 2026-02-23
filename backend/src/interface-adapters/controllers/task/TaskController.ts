@@ -9,12 +9,12 @@ import { ValidationError } from "@/application/error/AppError";
 import {
   createTaskSchema,
   updateTaskSchema,
-  moveTaskSchema,
+  // moveTaskSchema,
 } from "@/interface-adapters/http/validators/taskValidators";
 import {
   ICreateTask,
   IUpdateTask,
-  IMoveTaskPhase,
+  // IMoveTaskPhase,
   IDeleteTask,
   IListTasks,
   IGetTaskStats,
@@ -25,7 +25,7 @@ export class TaskController {
   constructor(
     @inject(TYPES.CreateTask) private createTaskUC: ICreateTask,
     @inject(TYPES.UpdateTask) private updateTaskUC: IUpdateTask,
-    @inject(TYPES.MoveTaskPhase) private moveTaskUC: IMoveTaskPhase,
+    // @inject(TYPES.MoveTaskPhase) private moveTaskUC: IMoveTaskPhase,
     @inject(TYPES.DeleteTask) private deleteTaskUC: IDeleteTask,
     @inject(TYPES.ListTasks) private listTasksUC: IListTasks,
     @inject(TYPES.GetTaskStats) private getStatsUC: IGetTaskStats,
@@ -48,7 +48,7 @@ export class TaskController {
 
   list = async (_req: Request, res: Response) => {
     const result = await this.listTasksUC.execute();
-    res.json(result);
+    res.json({ data: result });
   };
 
   update = async (req: Request, res: Response) => {
@@ -64,21 +64,21 @@ export class TaskController {
     res.json(result);
   };
 
-  movePhase = async (req: Request, res: Response) => {
-    const validatedData = moveTaskSchema.safeParse({
-      ...req.body,
-      id: req.params.id,
-    });
-    if (!validatedData.success) {
-      throw new ValidationError(validatedData.error.issues[0].message);
-    }
+  // movePhase = async (req: Request, res: Response) => {
+  //   const validatedData = moveTaskSchema.safeParse({
+  //     ...req.body,
+  //     id: req.params.id,
+  //   });
+  //   if (!validatedData.success) {
+  //     throw new ValidationError(validatedData.error.issues[0].message);
+  //   }
 
-    // @ts-expect-error - current operator ID
-    const userId = req.user.id;
-    // The use case handles the permission check (Assigned user only)
-    const result = await this.moveTaskUC.execute(validatedData.data, userId);
-    res.json(result);
-  };
+  //   // @ts-expect-error - current operator ID
+  //   const userId = req.user.id;
+  //   // The use case handles the permission check (Assigned user only)
+  //   const result = await this.moveTaskUC.execute(validatedData.data, userId);
+  //   res.json(result);
+  // };
 
   delete = async (req: Request, res: Response) => {
     const { id } = req.params;

@@ -38,7 +38,7 @@ export type ApiError = {
 //Tasks
 //---------------------------------------------------
 
-export type TaskStatus = "todo" | "inprogress" | "done";
+export type TaskStatus = "todo" | "in-progress" | "done";
 export type ViewType = "board" | "stats" | "login" | "register";
 export type TaskPriority = "low" | "medium" | "high";
 
@@ -52,10 +52,10 @@ export interface Task {
   title: string;
   description: string | null;
   status: TaskStatus;
-  priority: TaskPriority;
-  dueDate: string | null;
-  assignedTo: assignedUser | null;
+  // priority: TaskPriority;
+  // dueDate: string | null;
   createdBy: User;
+  createdAt: string;
 }
 
 export interface AssignableMember {
