@@ -115,7 +115,7 @@ const VerifyOTPPage: React.FC = () => {
               fontSize: "0.7rem",
             }}
           >
-            {(localError || error).toUpperCase()}
+            {(localError || error || "").toUpperCase()}
           </Alert>
         )}
 
