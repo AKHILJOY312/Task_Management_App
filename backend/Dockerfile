@@ -11,11 +11,16 @@ COPY . .
 RUN npm run build
 
 
-# ---------- Stage 2: Serve ----------
-FROM nginx:stable-alpine
+# ---------- Stage 2: Production ----------
+FROM node:20-alpine
 
-COPY --from=builder /app/dist /usr/share/nginx/html
+WORKDIR /app
 
-EXPOSE 80
+COPY package*.json ./
+RUN npm install --omit=dev
 
-CMD ["nginx", "-g", "daemon off;"]
+COPY --from=builder /app/dist ./dist
+
+EXPOSE 3000
+
+CMD ["node", "dist/infra/web/server.js"]
